@@ -9,11 +9,12 @@ type userRepoSQL struct {
 	db *sql.DB
 }
 
-// NewSQLRepo accepts SQL database instance and return Repostory.
+// newSQLRepo accepts SQL database instance and return Repostory.
 // Note that Put, Upd and Rename methods enforce non-zero timestapms
 // of User struct. If either Created or Updated fields are zero time
 // values (IsZero() returns true), then they are updated with time.Now()
-// Put method also sets Enabled field to true for User struct.
+// Put method also sets Enabled field to true for User struct. Upd
+// always sets Updated field to time.Now().
 // This way it is safe to actually fill only Name and Secret fields
 // of User struct and pass it to Put method.
 func newSQLRepo(db *sql.DB) Repository {
@@ -28,7 +29,7 @@ func (u *userRepoSQL) Put(user User) error {
 	if !isValidUser(&user) {
 		return ErrValidateUser
 	}
-	checkAndCorrectTimestamps(&user)
+	updateTimestamps(&user)
 	user.Enabled = true
 	return putUsr(u.db, &user)
 }
@@ -37,7 +38,7 @@ func (u *userRepoSQL) Upd(user User) error {
 	if !isValidUser(&user) {
 		return ErrValidateUser
 	}
-	checkAndCorrectTimestamps(&user)
+	updateTimestamps(&user)
 	return updUsr(u.db, &user)
 }
 
@@ -54,14 +55,12 @@ func (u *userRepoSQL) Close() error {
 }
 
 // a bit of enforcement of data integrity
-func checkAndCorrectTimestamps(u *User) {
+func updateTimestamps(u *User) {
 	now := time.Now()
 	if u.Created.IsZero() {
 		u.Created = now
 	}
-	if u.Updated.IsZero() {
-		u.Updated = now
-	}
+	u.Updated = now
 }
 
 // thou shalt not ever omit these fields
