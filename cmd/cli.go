@@ -55,11 +55,13 @@ func checkPwd(a users.Authenticator, username, password string) {
 		fmt.Println(err)
 		return
 	}
+	res := ""
 	if ok {
-		fmt.Printf("correct password for user %s\n", username)
+		res = "correct"
 	} else {
-		fmt.Printf("incorrect password for user %s\n", username)
+		res = "incorrect"
 	}
+	fmt.Printf("%s password for user %s\n", res, username)
 }
 
 func toggleUsr(r users.Repository, username string) {
